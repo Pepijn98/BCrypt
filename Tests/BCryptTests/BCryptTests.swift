@@ -5,8 +5,8 @@ import BCrypt
 final class BCryptTests: XCTestCase {
     func testBCrypt() throws {
         let bcrypt = try BCrypt()
-        let str = "Hello"
-        let digest = bcrypt.digest(salt: bcrypt.salt, message: Bytes(str.utf8))
+        let message = "Hello".makeBytes()
+        let digest = bcrypt.digest(salt: bcrypt.salt, message: message)
         let serializer = Serializer(bcrypt.salt, digest: digest)
         let bytes = serializer.serialize()
         print(String(bytes: bytes, encoding: .utf8) ?? "none")

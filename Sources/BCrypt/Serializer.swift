@@ -11,7 +11,8 @@ public final class Serializer {
     }
 
     public func serializeSalt() -> Bytes {
-        let prefix = "$2b$".makeBytes()
+        let prefix: Bytes = [.dollar, .two, .b, .dollar]
+
         var bytes = Bytes()
         bytes.reserveCapacity(24)
         bytes.append(contentsOf: prefix)
