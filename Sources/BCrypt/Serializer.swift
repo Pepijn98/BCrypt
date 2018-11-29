@@ -1,4 +1,5 @@
 import Core
+// import Foundation
 
 public final class Serializer {
     let salt: Salt
@@ -10,7 +11,7 @@ public final class Serializer {
     }
 
     public func serializeSalt() -> Bytes {
-        var bytes: Bytes = [.dollar, .two, .a, .dollar]
+        var bytes: Bytes = [.dollar, .two, .b, .dollar]
 
         if salt.cost < 10 {
             bytes += .zero
@@ -19,6 +20,7 @@ public final class Serializer {
         bytes += .dollar
 
         let encodedSalt = Base64.encode(salt.bytes, count: 16)
+        // print(String(bytes: encodedSalt, encoding: .utf8) ?? "none")
         bytes += encodedSalt
 
         return bytes
