@@ -11,17 +11,20 @@ public final class Serializer {
     }
 
     public func serializeSalt() -> Bytes {
-        var bytes: Bytes = [.dollar, .two, .b, .dollar]
+        let prefix = "$2b$".makeBytes()
+        var bytes = Bytes()
+        bytes.reserveCapacity(24)
+        bytes.append(contentsOf: prefix)
 
         if salt.cost < 10 {
-            bytes += .zero
+            bytes.append(.zero)
         }
-        bytes += salt.cost.description.makeBytes()
-        bytes += .dollar
+        bytes.append(contentsOf: salt.cost.description.makeBytes())
+        bytes.append(.dollar)
 
         let encodedSalt = Base64.encode(salt.bytes, count: 16)
         // print(String(bytes: encodedSalt, encoding: .utf8) ?? "none")
-        bytes += encodedSalt
+        bytes.append(contentsOf: encodedSalt)
 
         return bytes
     }
@@ -31,7 +34,7 @@ public final class Serializer {
 
         if let digest = digest {
             let encodedDigest = Base64.encode(digest, count: 23)
-            bytes += encodedDigest
+            bytes.append(contentsOf: encodedDigest)
         }
 
         return bytes

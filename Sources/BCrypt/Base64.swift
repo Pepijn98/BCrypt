@@ -38,7 +38,7 @@ struct Base64 {
         var offset: Int = 0
         var c1: UInt8
         var c2: UInt8
-        var result = [UInt8]()
+        var result = Bytes()
         result.reserveCapacity(24)
 
         while offset < len {
