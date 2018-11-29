@@ -58,7 +58,7 @@ public final class BCrypt {
             return digest
         }
 
-        // let message = message + [0]
+        let message = message + [0]
 
         var j: Int
         let clen: Int = 6

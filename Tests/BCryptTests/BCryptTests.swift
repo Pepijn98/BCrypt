@@ -1,16 +1,19 @@
 import XCTest
-import Random
+import Core
 import BCrypt
 
 final class BCryptTests: XCTestCase {
-    func test() throws {
+    func testBCrypt() throws {
         let bcrypt = try BCrypt()
-        let digest = bcrypt.digest(salt: bcrypt.salt, message: Bytes(repeating: 0, count: 1))
-        print(digest)
+        let str = "Hello"
+        let digest = bcrypt.digest(salt: bcrypt.salt, message: Bytes(str.utf8))
+        let serializer = Serializer(bcrypt.salt, digest: digest)
+        let bytes = serializer.serialize()
+        print(String(bytes: bytes, encoding: .utf8) ?? "none")
         XCTAssertNotNil(digest)
     }
 
     static var allTests = [
-        ("test", test),
+        ("testBCrypt", testBCrypt),
     ]
 }
