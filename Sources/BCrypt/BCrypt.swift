@@ -118,9 +118,9 @@ public final class BCrypt {
 //    }
 
     private func streamToWord(data: UnsafeMutablePointer<UInt8>, off offp: inout UInt32) -> UInt32 {
-        var _ : Int
-        var word : UInt32 = 0
-        var off : UInt32 = offp
+        var _: Int
+        var word: UInt32 = 0
+        var off: UInt32 = offp
 
         data.withMemoryRebound(to: UInt32.self, capacity: 4) { data in
             word = (word << 8) | (data[numericCast(off)] & 0xff)

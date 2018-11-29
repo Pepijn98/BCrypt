@@ -1,6 +1,5 @@
 public enum BCryptError: String, Error {
     case invalidSaltByteCount
-    case invalidSaltCost
 }
 
 extension BCryptError {
@@ -8,8 +7,6 @@ extension BCryptError {
         switch self {
             case .invalidSaltByteCount:
                 return "BCrypt salt requires 16 bytes"
-            case .invalidSaltCost:
-                return "Invalid salt cost format"
         }
     }
 }
