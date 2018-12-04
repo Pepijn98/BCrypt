@@ -8,9 +8,10 @@ public struct Salt {
     public static var defaultCost: UInt = 14
 
     public let cost: UInt
-    public let bytes: Bytes
+    public let bytes: [UInt8]
+    public let count: UInt
 
-    public init(cost: UInt = Salt.defaultCost, bytes: Bytes? = nil) throws {
+    public init(cost: UInt = Salt.defaultCost, bytes: [UInt8]? = nil) throws {
         let bytes = try bytes ?? Salt.defaultRandom.bytes(count: 16)
 
         guard bytes.count == 16 else {
@@ -19,13 +20,14 @@ public struct Salt {
 
         self.cost = cost
         self.bytes = bytes
+        self.count = numericCast(bytes.count)
     }
 }
 
 public final class BCrypt {
     public let salt: Salt
 
-    private var _digest: Bytes?
+    private var _digest: [UInt8]?
     private var p: UnsafeMutablePointer<UInt32>
     private var s: UnsafeMutablePointer<UInt32>
 
@@ -53,8 +55,8 @@ public final class BCrypt {
         s.deallocate()
     }
 
-    public func digest(salt: Salt, message: Bytes) -> Bytes {
-        if let digest: Bytes = _digest {
+    public func digest(message: [UInt8]) -> [UInt8] {
+        if let digest = _digest {
             return digest
         }
 
@@ -64,15 +66,19 @@ public final class BCrypt {
         let clen: Int = 6
         var cdata: [UInt32] = BCryptConstants.ctext
 
-        let saltPointer: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer<UInt8>(mutating: salt.bytes)
-        let messagePointer: UnsafeMutablePointer<UInt8> = UnsafeMutablePointer<UInt8>(mutating: message)
-        enhanceKeySchedule(data: saltPointer, key: messagePointer)
+        var data = salt.bytes
+        let dataLength = salt.count
+
+        var key = message
+        let keyLength: UInt = numericCast(message.count)
+
+        enhanceKeySchedule(data: &data, key: &key, dataLength: dataLength, keyLength: keyLength)
 
         let rounds = 1 << salt.cost
 
         for _ in 0..<rounds {
-            expandKey(key: messagePointer)
-            expandKey(key: saltPointer)
+            expandKey(key: &key, length: keyLength)
+            expandKey(key: &data, length: dataLength)
         }
 
         for _ in 0..<64 {
@@ -81,7 +87,8 @@ public final class BCrypt {
             }
         }
 
-        var result = Bytes(repeating: 0, count: clen * 4)
+        var result = [UInt8](repeating: 0, count: clen * 4)
+        result.reserveCapacity(24)
 
         j = 0
         for i in 0..<clen {
@@ -100,31 +107,14 @@ public final class BCrypt {
         return digest
     }
 
-//    func encrypt(L: inout UnsafeMutablePointer<UInt32>, R: inout UnsafeMutablePointer<UInt32>) {
-//        var i: Int = 0
-//        while i < 16 {
-//            i = i &+ 2
-//            L ^= p[i]
-//            R ^= f(L)
-//            R ^= P[i &+ 1]
-//            L ^= f(R)
-//        }
-//        L ^= p[16]
-//        R ^= p[17]
-//        //  TODO: Is this correct?
-//        let oldL = L
-//        L = R
-//        R = oldL
-//    }
-
-    private func streamToWord(data: UnsafeMutablePointer<UInt8>, off offp: inout UInt32) -> UInt32 {
+    private func streamToWord(data: UnsafeMutablePointer<UInt8>, length: UInt, off offp: inout UInt32) -> UInt32 {
         var _: Int
         var word: UInt32 = 0
         var off: UInt32 = offp
 
         data.withMemoryRebound(to: UInt32.self, capacity: 4) { data in
             word = (word << 8) | (data[numericCast(off)] & 0xff)
-            off = (off &+ 1) % 4
+            off = (off &+ 1) % numericCast(length)
         }
 
         offp = off
@@ -161,12 +151,12 @@ public final class BCrypt {
         data[off &+ 1] = L
     }
 
-    private func expandKey(key: UnsafeMutablePointer<UInt8>) {
+    private func expandKey(key: UnsafeMutablePointer<UInt8>, length: UInt) {
         var koffp: UInt32 = 0
         var data: [UInt32] = [0, 0]
 
         for i in 0..<plen {
-            p[i] = p[i] ^ streamToWord(data: key, off: &koffp)
+            p[i] = p[i] ^ streamToWord(data: key, length: length, off: &koffp)
         }
 
         var i = 0
@@ -188,21 +178,21 @@ public final class BCrypt {
         }
     }
 
-    private func enhanceKeySchedule(data: UnsafeMutablePointer<UInt8>, key: UnsafeMutablePointer<UInt8>) {
+    private func enhanceKeySchedule(data: UnsafeMutablePointer<UInt8>, key: UnsafeMutablePointer<UInt8>, dataLength: UInt, keyLength: UInt) {
         var doffp: UInt32 = 0
         var koffp: UInt32 = 0
 
         var LR: [UInt32] = [0, 0]
 
         for i in 0..<plen {
-            p[i] = p[i] ^ streamToWord(data: key, off: &koffp)
+            p[i] = p[i] ^ streamToWord(data: key, length: keyLength, off: &koffp)
         }
 
         var i = 0
 
         while i < plen {
-            LR[0] ^= streamToWord(data: data, off: &doffp)
-            LR[1] ^= streamToWord(data: data, off: &doffp)
+            LR[0] ^= streamToWord(data: data, length: dataLength, off: &doffp)
+            LR[1] ^= streamToWord(data: data, length: dataLength, off: &doffp)
             self.encrypt(&LR, off: 0)
             p[i] = LR[0]
             p[i &+ 1] = LR[1]
@@ -213,13 +203,47 @@ public final class BCrypt {
         i = 0
 
         while i < slen {
-            LR[0] ^= streamToWord(data: data, off: &doffp)
-            LR[1] ^= streamToWord(data: data, off: &doffp)
+            LR[0] ^= streamToWord(data: data, length: dataLength, off: &doffp)
+            LR[1] ^= streamToWord(data: data, length: dataLength, off: &doffp)
             self.encrypt(&LR, off: 0)
             s[i] = LR[0]
             s[i &+ 1] = LR[1]
 
             i = i &+ 2
         }
+    }
+
+    public static func make(message: [UInt8], salt: Salt? = nil) throws -> [UInt8] {
+        let bcrypt = try BCrypt(salt)
+        let digest = bcrypt.digest(message: message)
+        let serializer = Serializer(bcrypt.salt, digest: digest)
+        return serializer.serialize()
+    }
+
+    public static func make(message: BytesConvertible, salt: Salt? = nil) throws -> [UInt8] {
+        return try make(message: message.makeBytes(), salt: salt)
+    }
+
+    public static func verify(message: [UInt8], matches input: [UInt8]) throws -> Bool {
+        let parser = try Parser(input)
+        let salt = try parser.parseSalt()
+        let digest = try parser.parseDigest() ?? []
+
+        let bcrypt = try BCrypt(salt)
+        let testDigest = bcrypt.digest(message: message)
+
+        return testDigest == digest
+    }
+
+    public static func verify(message: BytesConvertible, matches digest: BytesConvertible) throws -> Bool {
+        return try verify(message: message.makeBytes(), matches: digest.makeBytes())
+    }
+
+    public static func verify(message: [UInt8], matches digest: BytesConvertible) throws -> Bool {
+        return try verify(message: message, matches: digest.makeBytes())
+    }
+
+    public static func verify(message: BytesConvertible, matches digest: [UInt8]) throws -> Bool {
+        return try verify(message: message.makeBytes(), matches: digest)
     }
 }

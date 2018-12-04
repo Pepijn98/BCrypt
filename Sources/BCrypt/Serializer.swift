@@ -1,19 +1,16 @@
-import Core
-// import Foundation
-
 public final class Serializer {
     let salt: Salt
-    let digest: Bytes?
+    let digest: [UInt8]?
 
-    public init(_ salt: Salt, digest: Bytes? = nil) {
+    public init(_ salt: Salt, digest: [UInt8]? = nil) {
         self.salt = salt
         self.digest = digest
     }
 
-    public func serializeSalt() -> Bytes {
-        let prefix: Bytes = [.dollar, .two, .b, .dollar]
+    public func serializeSalt() -> [UInt8] {
+        let prefix: [UInt8] = [.dollar, .two, .a, .dollar]
 
-        var bytes = Bytes()
+        var bytes = [UInt8]()
         bytes.reserveCapacity(24)
         bytes.append(contentsOf: prefix)
 
@@ -24,13 +21,12 @@ public final class Serializer {
         bytes.append(.dollar)
 
         let encodedSalt = Base64.encode(salt.bytes, count: 16)
-        // print(String(bytes: encodedSalt, encoding: .utf8) ?? "none")
         bytes.append(contentsOf: encodedSalt)
 
         return bytes
     }
 
-    public func serialize() -> Bytes {
+    public func serialize() -> [UInt8] {
         var bytes = serializeSalt()
 
         if let digest = digest {

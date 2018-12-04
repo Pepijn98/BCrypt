@@ -1,7 +1,5 @@
-import Core
-
 struct Base64 {
-    static let encodingTable: [Byte] = [
+    static let encodingTable: [UInt8] = [
         .period, .forwardSlash, .A, .B, .C, .D, .E, .F, .G, .H, .I, .J, .K,
         .L, .M, .N, .O, .P, .Q, .R, .S, .T, .U, .V, .W, .X,
         .Y, .Z, .a, .b, .c, .d, .e, .f, .g, .h, .i, .j, .k,
@@ -9,7 +7,7 @@ struct Base64 {
         .y, .z, .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine
     ]
 
-    static let decodingTable: [Byte]  = [
+    static let decodingTable: [UInt8]  = [
         .max, .max, .max, .max, .max, .max, .max, .max, .max, .max,
         .max, .max, .max, .max, .max, .max, .max, .max, .max, .max,
         .max, .max, .max, .max, .max, .max, .max, .max, .max, .max,
@@ -25,7 +23,7 @@ struct Base64 {
         51, 52, 53, .max, .max, .max, .max, .max
     ]
 
-    static func encode(_ bytes: Bytes, count: UInt) -> Bytes {
+    static func encode(_ bytes: [UInt8], count: UInt) -> [UInt8] {
         if bytes.count == 0 || count == 0 {
             return []
         }
@@ -38,7 +36,7 @@ struct Base64 {
         var offset: Int = 0
         var c1: UInt8
         var c2: UInt8
-        var result = Bytes()
+        var result = [UInt8]()
         result.reserveCapacity(24)
 
         while offset < len {
@@ -71,32 +69,33 @@ struct Base64 {
         return result
     }
 
-    private static func char64of(_ x: Byte) -> Byte {
+    private static func char64of(_ x: UInt8) -> UInt8 {
         if x < 0 || x > 128 - 1 {
-            return Byte.max
+            return UInt8.max
         }
         return decodingTable[numericCast(x)]
     }
 
-    static func decode(_ bytes: Bytes, count: UInt) -> Bytes {
+    static func decode(_ bytes: [UInt8], count: UInt) -> [UInt8] {
         let count: Int = numericCast(count)
 
         var off: Int = 0
         var olen: Int = 0
-        var result = Bytes(repeating: 0, count: count)
+        var result = [UInt8](repeating: 0, count: count)
+        result.reserveCapacity(count)
 
-        var c1: Byte
-        var c2: Byte
-        var c3: Byte
-        var c4: Byte
-        var o: Byte
+        var c1: UInt8
+        var c2: UInt8
+        var c3: UInt8
+        var c4: UInt8
+        var o: UInt8
 
         while off < bytes.count - 1 && olen < count {
             c1 = char64of(bytes[off])
             off = off &+ 1
             c2 = char64of(bytes[off])
             off = off &+ 1
-            if c1 == Byte.max || c2 == Byte.max {
+            if c1 == UInt8.max || c2 == UInt8.max {
                 break
             }
 
@@ -111,7 +110,7 @@ struct Base64 {
             c3 = char64of(bytes[numericCast(off)])
             off = off &+ 1
 
-            if c3 == Byte.max {
+            if c3 == UInt8.max {
                 break
             }
 
