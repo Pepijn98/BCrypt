@@ -9,7 +9,6 @@ public struct Salt {
 
     public let cost: UInt
     public let bytes: [UInt8]
-    public let count: UInt
 
     public init(cost: UInt = Salt.defaultCost, bytes: [UInt8]? = nil) throws {
         let bytes = try bytes ?? Salt.defaultRandom.bytes(count: 16)
@@ -20,7 +19,6 @@ public struct Salt {
 
         self.cost = cost
         self.bytes = bytes
-        self.count = numericCast(bytes.count)
     }
 }
 
@@ -65,18 +63,14 @@ public final class BCrypt {
         var cdata: [UInt32] = BCryptConstants.ctext
 
         var data: [UInt8] = salt.bytes
-        let dlen: UInt = salt.count
-
         var key: [UInt8] = message + [0]
-        let klen: UInt = numericCast(key.count)
 
-        enhanceKeySchedule(data: &data, key: &key, dataLength: dlen, keyLength: klen)
+        enhanceKeySchedule(data: &data, key: &key, dataLength: data.count, keyLength: key.count)
 
         let rounds = 1 << salt.cost
-
         for _ in 0..<rounds {
-            expandKey(key: &key, length: klen)
-            expandKey(key: &data, length: dlen)
+            expandKey(&key, length: key.count)
+            expandKey(&data, length: data.count)
         }
 
         for _ in 0..<64 {
@@ -105,7 +99,7 @@ public final class BCrypt {
         return digest
     }
 
-    private func streamToWord(data: UnsafeMutablePointer<UInt8>, length: UInt, off offp: inout UInt32) -> UInt32 {
+    private func streamToWord(data: UnsafeMutablePointer<UInt8>, length: Int, off offp: inout UInt32) -> UInt32 {
         var _: Int
         var word: UInt32 = 0
         var off: UInt32 = offp
@@ -149,7 +143,7 @@ public final class BCrypt {
         data[off &+ 1] = L
     }
 
-    private func expandKey(key: UnsafeMutablePointer<UInt8>, length: UInt) {
+    private func expandKey(_ key: UnsafeMutablePointer<UInt8>, length: Int) {
         var koffp: UInt32 = 0
         var data: [UInt32] = [0, 0]
 
@@ -176,21 +170,21 @@ public final class BCrypt {
         }
     }
 
-    private func enhanceKeySchedule(data: UnsafeMutablePointer<UInt8>, key: UnsafeMutablePointer<UInt8>, dataLength: UInt, keyLength: UInt) {
+    private func enhanceKeySchedule(data: UnsafeMutablePointer<UInt8>, key: UnsafeMutablePointer<UInt8>, dataLength dlen: Int, keyLength klen: Int) {
         var doffp: UInt32 = 0
         var koffp: UInt32 = 0
 
         var LR: [UInt32] = [0, 0]
 
         for i in 0..<plen {
-            p[i] = p[i] ^ streamToWord(data: key, length: keyLength, off: &koffp)
+            p[i] = p[i] ^ streamToWord(data: key, length: klen, off: &koffp)
         }
 
         var i = 0
 
         while i < plen {
-            LR[0] ^= streamToWord(data: data, length: dataLength, off: &doffp)
-            LR[1] ^= streamToWord(data: data, length: dataLength, off: &doffp)
+            LR[0] ^= streamToWord(data: data, length: dlen, off: &doffp)
+            LR[1] ^= streamToWord(data: data, length: dlen, off: &doffp)
             self.encrypt(&LR, off: 0)
             p[i] = LR[0]
             p[i &+ 1] = LR[1]
@@ -201,8 +195,8 @@ public final class BCrypt {
         i = 0
 
         while i < slen {
-            LR[0] ^= streamToWord(data: data, length: dataLength, off: &doffp)
-            LR[1] ^= streamToWord(data: data, length: dataLength, off: &doffp)
+            LR[0] ^= streamToWord(data: data, length: dlen, off: &doffp)
+            LR[1] ^= streamToWord(data: data, length: dlen, off: &doffp)
             self.encrypt(&LR, off: 0)
             s[i] = LR[0]
             s[i &+ 1] = LR[1]
@@ -218,8 +212,8 @@ public final class BCrypt {
         return serializer.serialize()
     }
 
-    public static func make(message: BytesConvertible, salt: Salt? = nil) throws -> [UInt8] {
-        return try make(message: message.makeBytes(), salt: salt)
+    public static func make(message: String, salt: Salt? = nil) throws -> [UInt8] {
+        return try make(message: message.bytes, salt: salt)
     }
 
     public static func verify(message: [UInt8], matches input: [UInt8]) throws -> Bool {
@@ -233,15 +227,15 @@ public final class BCrypt {
         return testDigest == digest
     }
 
-    public static func verify(message: BytesConvertible, matches digest: BytesConvertible) throws -> Bool {
-        return try verify(message: message.makeBytes(), matches: digest.makeBytes())
+    public static func verify(message: String, matches input: String) throws -> Bool {
+        return try verify(message: message.bytes, matches: input.bytes)
     }
 
-    public static func verify(message: [UInt8], matches digest: BytesConvertible) throws -> Bool {
-        return try verify(message: message, matches: digest.makeBytes())
+    public static func verify(message: [UInt8], matches input: String) throws -> Bool {
+        return try verify(message: message, matches: input.bytes)
     }
 
-    public static func verify(message: BytesConvertible, matches digest: [UInt8]) throws -> Bool {
-        return try verify(message: message.makeBytes(), matches: digest)
+    public static func verify(message: String, matches input: [UInt8]) throws -> Bool {
+        return try verify(message: message.bytes, matches: input)
     }
 }
