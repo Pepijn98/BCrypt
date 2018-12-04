@@ -7,7 +7,7 @@ final class BCryptTests: XCTestCase {
         let salt = try Salt()
 
         let bytes = try BCrypt.make(message: "hello", salt: salt)
-        let isEqual = try BCrypt.verify(message: "foo", matches: bytes)
+        let isEqual = try BCrypt.verify(message: "world", matches: bytes)
 
         print(String(bytes: bytes, encoding: .utf8) ?? "none")
 

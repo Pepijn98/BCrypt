@@ -65,18 +65,18 @@ public final class BCrypt {
         var cdata: [UInt32] = BCryptConstants.ctext
 
         var data: [UInt8] = salt.bytes
-        let dataLength: UInt = salt.count
+        let dlen: UInt = salt.count
 
         var key: [UInt8] = message + [0]
-        let keyLength: UInt = numericCast(key.count)
+        let klen: UInt = numericCast(key.count)
 
-        enhanceKeySchedule(data: &data, key: &key, dataLength: dataLength, keyLength: keyLength)
+        enhanceKeySchedule(data: &data, key: &key, dataLength: dlen, keyLength: klen)
 
         let rounds = 1 << salt.cost
 
         for _ in 0..<rounds {
-            expandKey(key: &key, length: keyLength)
-            expandKey(key: &data, length: dataLength)
+            expandKey(key: &key, length: klen)
+            expandKey(key: &data, length: dlen)
         }
 
         for _ in 0..<64 {
