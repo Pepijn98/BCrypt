@@ -7,11 +7,11 @@ final class BCryptTests: XCTestCase {
         let salt = try Salt()
 
         let bytes = try BCrypt.make(message: "hello", salt: salt)
-        let isEqual = try BCrypt.verify(message: "world", matches: bytes)
+        let isEqual = try BCrypt.verify(message: "hello", matches: bytes)
 
         print(String(bytes: bytes, encoding: .utf8) ?? "none")
 
-        XCTAssertEqual(isEqual, false)
+        XCTAssertEqual(isEqual, true)
     }
 
     func testBCrypt() throws {

@@ -104,10 +104,17 @@ public final class BCrypt {
         var word: UInt32 = 0
         var off: UInt32 = offp
 
+        for _ in 0..<4{
+            word = (word << 8) | (numericCast(data[numericCast(off)]) & 0xff)
+            off = (off &+ 1) % numericCast(length)
+        }
+
+        /*
         data.withMemoryRebound(to: UInt32.self, capacity: 4) { data in
             word = (word << 8) | (data[numericCast(off)] & 0xff)
             off = (off &+ 1) % numericCast(length)
         }
+        */
 
         offp = off
         return word
