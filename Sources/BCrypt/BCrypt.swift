@@ -60,17 +60,15 @@ public final class BCrypt {
             return digest
         }
 
-        let message = message + [0]
-
         var j: Int
         let clen: Int = 6
         var cdata: [UInt32] = BCryptConstants.ctext
 
-        var data = salt.bytes
-        let dataLength = salt.count
+        var data: [UInt8] = salt.bytes
+        let dataLength: UInt = salt.count
 
-        var key = message
-        let keyLength: UInt = numericCast(message.count)
+        var key: [UInt8] = message + [0]
+        let keyLength: UInt = numericCast(key.count)
 
         enhanceKeySchedule(data: &data, key: &key, dataLength: dataLength, keyLength: keyLength)
 
