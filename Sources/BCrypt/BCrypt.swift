@@ -195,7 +195,12 @@ public final class BCrypt {
         }
     }
 
-    private func enhanceKeySchedule(data: UnsafeMutablePointer<UInt8>, key: UnsafeMutablePointer<UInt8>, dataLength dlen: Int, keyLength klen: Int) {
+    private func enhanceKeySchedule(
+            data: UnsafeMutablePointer<UInt8>,
+            key: UnsafeMutablePointer<UInt8>,
+            dataLength dlen: Int,
+            keyLength klen: Int
+    ) {
         var doffp: UInt32 = 0
         var koffp: UInt32 = 0
 
