@@ -34,7 +34,7 @@ final class BCryptTests: XCTestCase {
         let parser = try Parser(bytes)
         let parsedSalt = try parser.parseSalt()
 
-        XCTAssertEqual(secret, String(bytes: parsedSalt.bytes, encoding: .utf8) ?? "")
+        XCTAssertEqual(secret, parsedSalt.bytes.string())
     }
 
     func testVerify() throws {
