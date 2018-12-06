@@ -1,17 +1,17 @@
-import Random
+import Core
 
 fileprivate let plen: Int = 18
 fileprivate let slen: Int = 1024
 
 public struct Salt {
-    public static var defaultRandom: RandomProtocol = OSRandom()
     public static var defaultCost: UInt = 14
 
     public let cost: UInt
     public let bytes: [UInt8]
 
+
     public init(cost: UInt = Salt.defaultCost, bytes: [UInt8]? = nil) throws {
-        let bytes = try bytes ?? Salt.defaultRandom.bytes(count: 16)
+        let bytes = bytes ?? BCrypt.generateRandomBytes(count: 16)
 
         guard bytes.count == 16 else {
             throw BCryptError.invalidSaltByteCount
@@ -97,6 +97,18 @@ public final class BCrypt {
         let digest = result[0..<23].array
         _digest = digest
         return digest
+    }
+
+    fileprivate static func generateRandomBytes(count: Int) -> [UInt8] {
+        var bytes = [UInt8](repeating: 0, count: count)
+        bytes.reserveCapacity(count)
+
+        for i in 0..<count {
+            let random = UInt8.random(in: 0...UInt8.max)
+            bytes[i] = random
+        }
+
+        return bytes
     }
 
     private func streamToWord(data: UnsafeMutablePointer<UInt8>, length: Int, off offp: inout UInt32) -> UInt32 {
@@ -212,18 +224,18 @@ public final class BCrypt {
         }
     }
 
-    public static func make(message: [UInt8], salt: Salt? = nil) throws -> [UInt8] {
+    public static func hash(message: [UInt8], with salt: Salt? = nil) throws -> [UInt8] {
         let bcrypt = try BCrypt(salt)
         let digest = bcrypt.digest(message: message)
         let serializer = Serializer(bcrypt.salt, digest: digest)
         return serializer.serialize()
     }
 
-    public static func make(message: String, salt: Salt? = nil) throws -> [UInt8] {
-        return try make(message: message.bytes, salt: salt)
+    public static func hash(message: String, with salt: Salt? = nil) throws -> [UInt8] {
+        return try hash(message: message.bytes, with: salt)
     }
 
-    public static func verify(message: [UInt8], matches input: [UInt8]) throws -> Bool {
+    public static func compare(message: [UInt8], with input: [UInt8]) throws -> Bool {
         let parser = try Parser(input)
         let salt = try parser.parseSalt()
         let digest = try parser.parseDigest() ?? []
@@ -234,15 +246,15 @@ public final class BCrypt {
         return testDigest == digest
     }
 
-    public static func verify(message: String, matches input: String) throws -> Bool {
-        return try verify(message: message.bytes, matches: input.bytes)
+    public static func compare(message: String, with input: String) throws -> Bool {
+        return try compare(message: message.bytes, with: input.bytes)
     }
 
-    public static func verify(message: [UInt8], matches input: String) throws -> Bool {
-        return try verify(message: message, matches: input.bytes)
+    public static func compare(message: [UInt8], with input: String) throws -> Bool {
+        return try compare(message: message, with: input.bytes)
     }
 
-    public static func verify(message: String, matches input: [UInt8]) throws -> Bool {
-        return try verify(message: message.bytes, matches: input)
+    public static func compare(message: String, with input: [UInt8]) throws -> Bool {
+        return try compare(message: message.bytes, with: input)
     }
 }
