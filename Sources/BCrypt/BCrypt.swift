@@ -1,4 +1,5 @@
 import Core
+import Foundation
 
 fileprivate let plen: Int = 18
 fileprivate let slen: Int = 1024
@@ -52,6 +53,12 @@ public final class BCrypt {
         s.deallocate()
     }
 
+    /// Encrypt a message of bytes
+    ///
+    /// - Parameters:
+    ///     - message: **Array<UInt8>** The data to encrypt
+    ///
+    /// - Returns: **Array<UInt8>** The encrypted data
     public func digest(message: [UInt8]) -> [UInt8] {
         if let digest = _digest {
             return digest
@@ -223,6 +230,16 @@ public final class BCrypt {
         }
     }
 
+    /// Encrypt and hash a message of bytes
+    ///
+    /// - Parameters:
+    ///     - message: **Array<UInt8>** The data to encrypt
+    ///     - salt: **Slat?** Optionally provide your own generated salt
+    ///
+    /// - Throws:
+    ///     - `BCryptError.invalidSaltByteCount` if `salt` count is invalid (less than 16)
+    ///
+    /// - Returns: **Array<UInt8>** The encrypted data
     public static func hash(message: [UInt8], with salt: Salt? = nil) throws -> [UInt8] {
         let bcrypt = try BCrypt(salt)
         let digest = bcrypt.digest(message: message)
@@ -230,14 +247,36 @@ public final class BCrypt {
         return serializer.serialize()
     }
 
+    /// Encrypt and hash a string message
+    ///
+    /// - Parameters:
+    ///     - message: **String** The data to encrypt
+    ///     - salt: **Slat?** Optionally provide your own generated salt
+    ///
+    /// - Throws:
+    ///     - `BCryptError.invalidSaltByteCount` if `salt` count is invalid (less than 16)
+    ///
+    /// - Returns: **Array<UInt8>** The encrypted data
     public static func hash(message: String, with salt: Salt? = nil) throws -> [UInt8] {
         return try hash(message: message.bytes, with: salt)
     }
 
-    public static func compare(message: [UInt8], with hash: [UInt8]) throws -> Bool {
+    /// Compare a message against an encrypted hash
+    ///
+    /// - Parameters:
+    ///     - message: **Array<UInt8>** The message to compare
+    ///     - hash: **Array<UInt8>** The hash to compare against
+    ///
+    /// - Throws:
+    ///     - `BCryptError.invalidSaltByteCount` if `salt` count is invalid (less than 16)
+    ///     - `BCryptError.invalidHash` if `hash` is not a valid bcrypt hash
+    ///     - `BCryptError.invalidSaltCost` if the salt cost is invalid
+    ///
+    /// - Returns: **Bool** True if message and hash are the same else false
+    public static func compare(message: [UInt8], against hash: [UInt8]) throws -> Bool {
         let parser = try Parser(hash)
         let salt = try parser.parseSalt()
-        let digest = try parser.parseDigest() ?? []
+        let digest = parser.parseDigest()
 
         let bcrypt = try BCrypt(salt)
         let testDigest = bcrypt.digest(message: message)
@@ -245,15 +284,60 @@ public final class BCrypt {
         return testDigest == digest
     }
 
-    public static func compare(message: String, with hash: String) throws -> Bool {
-        return try compare(message: message.bytes, with: hash.bytes)
+    /// Compare a message against an encrypted hash
+    ///
+    /// - Parameters:
+    ///     - message: **String** The message to compare
+    ///     - hash: **String** The hash to compare against
+    ///
+    /// - Throws:
+    ///     - `BCryptError.invalidSaltByteCount` if `salt` count is invalid (less than 16)
+    ///     - `BCryptError.invalidHash` if `hash` is not a valid bcrypt hash
+    ///     - `BCryptError.invalidSaltCost` if the salt cost is invalid
+    ///
+    /// - Returns: **Bool** True if message and hash are the same else false
+    public static func compare(message: String, against hash: String) throws -> Bool {
+        return try compare(message: message.bytes, against: hash.bytes)
     }
 
-    public static func compare(message: [UInt8], with hash: String) throws -> Bool {
-        return try compare(message: message, with: hash.bytes)
+    /// Compare a message against an encrypted hash
+    ///
+    /// - Parameters:
+    ///     - message: **Array<UInt8>** The message to compare
+    ///     - hash: **String** The hash to compare against
+    ///
+    /// - Throws:
+    ///     - `BCryptError.invalidSaltByteCount` if `salt` count is invalid (less than 16)
+    ///     - `BCryptError.invalidHash` if `hash` is not a valid bcrypt hash
+    ///     - `BCryptError.invalidSaltCost` if the salt cost is invalid
+    ///
+    /// - Returns: **Bool** True if message and hash are the same else false
+    public static func compare(message: [UInt8], against hash: String) throws -> Bool {
+        return try compare(message: message, against: hash.bytes)
     }
 
-    public static func compare(message: String, with hash: [UInt8]) throws -> Bool {
-        return try compare(message: message.bytes, with: hash)
+    /// Compare a message against an encrypted hash
+    ///
+    /// - Parameters:
+    ///     - message: **String** The message to compare
+    ///     - hash: **Array<UInt8>** The hash to compare against
+    ///
+    /// - Throws:
+    ///     - `BCryptError.invalidSaltByteCount` if `salt` count is invalid (less than 16)
+    ///     - `BCryptError.invalidHash` if `hash` is not a valid bcrypt hash
+    ///     - `BCryptError.invalidSaltCost` if the salt cost is invalid
+    ///
+    /// - Returns: **Bool** True if message and hash are the same else false
+    public static func compare(message: String, against hash: [UInt8]) throws -> Bool {
+        return try compare(message: message.bytes, against: hash)
+    }
+}
+
+extension Array where Element == UInt8 {
+    /// Convert UInt8 array to string
+    ///
+    /// - Returns: **String** The converted string, empty string if it wasn't possible to convert
+    public func string() -> String {
+        return String(bytes: self, encoding: .utf8) ?? ""
     }
 }

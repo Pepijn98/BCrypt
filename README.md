@@ -6,20 +6,18 @@
 ### Hash
 ```swift
 import BCrypt
-import Foundation
 
 let bytes = try BCrypt.hash(message: "test")
-print(String(bytes: bytes, encoding: .utf8) ?? "")
+print(bytes.string())
 ```
 
 ### Hash with salt
 ```swift
 import BCrypt
-import Foundation
 
 let salt = Salt(cost: 14)
 let bytes = try BCrypt.hash(message: "test", with: salt)
-print(String(bytes: bytes, encoding: .utf8) ?? "")
+print(bytes.string())
 ```
 
 ### Compare
@@ -27,6 +25,6 @@ print(String(bytes: bytes, encoding: .utf8) ?? "")
 import BCrypt
 
 let bytes = try BCrypt.hash(message: "test")
-let result = try BCrypt.compare(message: "test", with: bytes)
+let result = try BCrypt.compare(message: "test", against: bytes)
 print(result) // => True
 ```

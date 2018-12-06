@@ -22,7 +22,7 @@ public final class Parser {
         }
     }
 
-    public func parseDigest() throws -> [UInt8]? {
+    public func parseDigest() -> [UInt8]? {
         guard let encodedDigest = self.encodedDigest else {
             return nil
         }

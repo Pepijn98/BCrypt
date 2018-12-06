@@ -6,14 +6,14 @@ final class BCryptTests: XCTestCase {
     func testValid() throws {
         let salt = try Salt()
         let bytes = try BCrypt.hash(message: "test", with: salt)
-        let result = try BCrypt.compare(message: "test", with: bytes)
+        let result = try BCrypt.compare(message: "test", against: bytes)
         XCTAssertEqual(result, true)
     }
 
     func testFail() throws {
         let salt = try Salt()
         let bytes = try BCrypt.hash(message: "test1", with: salt)
-        let result = try BCrypt.compare(message: "test2", with: bytes)
+        let result = try BCrypt.compare(message: "test2", against: bytes)
         XCTAssertEqual(result, false)
     }
 
@@ -39,7 +39,7 @@ final class BCryptTests: XCTestCase {
 
     func testVerify() throws {
         for (desired, message) in tests {
-            let result = try BCrypt.compare(message: message, with: desired)
+            let result = try BCrypt.compare(message: message, against: desired)
             XCTAssert(result, "Message '\(message)' did not create \(desired)")
         }
     }
