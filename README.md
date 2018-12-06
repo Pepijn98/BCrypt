@@ -1,5 +1,5 @@
 # BCrypt
-![Swift](http://img.shields.io/badge/swift-3.2-brightgreen.svg)
+![Swift](http://img.shields.io/badge/swift-4.2-brightgreen.svg)
 
 ## Usage
 
