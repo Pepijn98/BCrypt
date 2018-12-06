@@ -6,6 +6,7 @@
 ### Hash
 ```swift
 import BCrypt
+import Foundation
 
 let bytes = try BCrypt.hash(message: "test")
 print(String(bytes: bytes, encoding: .utf8) ?? "")
@@ -14,6 +15,7 @@ print(String(bytes: bytes, encoding: .utf8) ?? "")
 ### Hash with salt
 ```swift
 import BCrypt
+import Foundation
 
 let salt = Salt(cost: 14)
 let bytes = try BCrypt.hash(message: "test", with: salt)

@@ -9,7 +9,6 @@ public struct Salt {
     public let cost: UInt
     public let bytes: [UInt8]
 
-
     public init(cost: UInt = Salt.defaultCost, bytes: [UInt8]? = nil) throws {
         let bytes = bytes ?? BCrypt.generateRandomBytes(count: 16)
 
