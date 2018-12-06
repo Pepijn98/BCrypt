@@ -34,7 +34,7 @@ public final class Parser {
         let cost = try parseCost()
 
         let decoded = Base64.decode(encodedSalt, count: 16)
-        return try Salt(cost: numericCast(cost), bytes: decoded)
+        return try Salt(cost: cost, bytes: decoded)
     }
 
     public func parseCost() throws -> UInt {

@@ -235,8 +235,8 @@ public final class BCrypt {
         return try hash(message: message.bytes, with: salt)
     }
 
-    public static func compare(message: [UInt8], with input: [UInt8]) throws -> Bool {
-        let parser = try Parser(input)
+    public static func compare(message: [UInt8], with hash: [UInt8]) throws -> Bool {
+        let parser = try Parser(hash)
         let salt = try parser.parseSalt()
         let digest = try parser.parseDigest() ?? []
 
@@ -246,15 +246,15 @@ public final class BCrypt {
         return testDigest == digest
     }
 
-    public static func compare(message: String, with input: String) throws -> Bool {
-        return try compare(message: message.bytes, with: input.bytes)
+    public static func compare(message: String, with hash: String) throws -> Bool {
+        return try compare(message: message.bytes, with: hash.bytes)
     }
 
-    public static func compare(message: [UInt8], with input: String) throws -> Bool {
-        return try compare(message: message, with: input.bytes)
+    public static func compare(message: [UInt8], with hash: String) throws -> Bool {
+        return try compare(message: message, with: hash.bytes)
     }
 
-    public static func compare(message: String, with input: [UInt8]) throws -> Bool {
-        return try compare(message: message.bytes, with: input)
+    public static func compare(message: String, with hash: [UInt8]) throws -> Bool {
+        return try compare(message: message.bytes, with: hash)
     }
 }
