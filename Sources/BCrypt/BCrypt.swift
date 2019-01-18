@@ -127,13 +127,6 @@ public final class BCrypt {
             off = (off &+ 1) % numericCast(length)
         }
 
-        /*
-        data.withMemoryRebound(to: UInt32.self, capacity: 4) { data in
-            word = (word << 8) | (data[numericCast(off)] & 0xff)
-            off = (off &+ 1) % numericCast(length)
-        }
-        */
-
         offp = off
         return word
     }
