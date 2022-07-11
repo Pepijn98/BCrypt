@@ -43,14 +43,6 @@ final class BCryptTests: XCTestCase {
             XCTAssert(result, "Message '\(message)' did not create \(desired)")
         }
     }
-
-    static var allTests = [
-        ("testValid", testValid),
-        ("testFail", testFail),
-        ("testBCrypt", testBCrypt),
-        ("testSalt", testSalt),
-        ("testVerify", testVerify),
-    ]
 }
 
 // Hashes from vapor to test if it properly works

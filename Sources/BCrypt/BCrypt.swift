@@ -331,11 +331,28 @@ public final class BCrypt {
     }
 }
 
+extension String {
+    public var bytes: [UInt8] {
+        get {
+            return [UInt8](self.utf8)
+        }
+    }
+}
+
 extension Array where Element == UInt8 {
     /// Convert UInt8 array to string
     ///
     /// - Returns: **String** The converted string, empty string if it wasn't possible to convert
     public func string() -> String {
         return String(bytes: self, encoding: .utf8) ?? ""
+    }
+}
+
+extension Sequence {
+    /**
+        Convert the given sequence to its array representation
+    */
+    public var array: [Iterator.Element] {
+        return Array(self)
     }
 }

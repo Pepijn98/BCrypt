@@ -1,3 +1,5 @@
+import Core
+
 public final class Serializer {
     let salt: Salt
     let digest: [UInt8]?
@@ -17,7 +19,7 @@ public final class Serializer {
         if salt.cost < 10 {
             bytes.append(.zero)
         }
-        bytes.append(contentsOf: salt.cost.description.makeBytes())
+        bytes.append(contentsOf: salt.cost.description.bytes)
         bytes.append(.dollar)
 
         let encodedSalt = Base64.encode(salt.bytes, count: 16)

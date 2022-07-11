@@ -38,7 +38,11 @@ public final class Parser {
     }
 
     public func parseCost() throws -> UInt {
-        guard let cost = costBytes.decimalInt else {
+        guard let costString = String(bytes: costBytes, encoding: .utf8) else {
+            throw BCryptError.invalidSaltCost
+        }
+
+        guard let cost = Int(costString) else {
             throw BCryptError.invalidSaltCost
         }
 
